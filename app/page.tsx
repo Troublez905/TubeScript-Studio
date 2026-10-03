@@ -3,24 +3,32 @@
 import {
   BarChart3,
   Bell,
-  BookOpen,
+  Bookmark,
   Check,
+  ChevronRight,
   Clapperboard,
   Clipboard,
   Download,
   FileText,
-  Film,
+  Flame,
+  Grid2X2,
+  History,
+  ImageIcon,
+  LayoutList,
   Lightbulb,
-  Library,
   Loader2,
   Menu,
-  Play,
+  MonitorPlay,
+  Plus,
   RefreshCcw,
   Search,
   Settings,
+  Shuffle,
   Sparkles,
+  Star,
+  Target,
   Timer,
-  Wand2
+  Zap
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
@@ -29,16 +37,24 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { exportMarkdown, exportTeleprompter } from "@/lib/export";
 import { formatLabel, wordsAndMinutes } from "@/lib/studio-data";
-import type { Angle, ProductionPack, ProjectInput, VideoMode } from "@/lib/types";
+import type { Angle, ProductionPack, ProjectInput } from "@/lib/types";
 
-const niches = [
-  "Tech & Reviews",
-  "Cybersecurity",
-  "Gaming",
-  "Tutorials",
-  "Storytelling/Vlog",
-  "Business/Finance"
+const niches = ["Tech & Reviews", "Cybersecurity", "Gaming", "Tutorials", "Storytelling/Vlog", "Business/Finance"];
+const formatStyles = ["Tutorial", "Explainer", "Review", "Listicle", "Storytime", "Case Study"];
+const suggestions = [
+  ["Best beginner camera in 2026?", "Gear breakdown for first-time creators"],
+  ["How to stay consistent on YouTube", "Workflow and schedule system"],
+  ["Tools that actually help YouTubers grow", "Creator stack comparison"]
 ];
+const navItems = [
+  [Zap, "Create", true],
+  [History, "History", false],
+  [MonitorPlay, "My Videos", false],
+  [Grid2X2, "Popular Formats", false],
+  [FileText, "Templates", false],
+  [BarChart3, "Analytics", false],
+  [Settings, "Settings", false]
+] as const;
 
 type StudioState = {
   input: ProjectInput;
@@ -80,25 +96,32 @@ export default function Home() {
   const [loadingAngles, setLoadingAngles] = useState(false);
   const [loadingProduction, setLoadingProduction] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("layout");
 
   const scriptStats = useMemo(() => {
     const script = production?.storyboard.map((block) => block.script).join(" ") ?? "";
     return wordsAndMinutes(script);
   }, [production]);
 
-  async function generateAngles() {
+  async function generateAngles(nextInput = input) {
     setLoadingAngles(true);
     try {
       const response = await fetch("/api/angles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input)
+        body: JSON.stringify(nextInput)
       });
       const data = (await response.json()) as { angles: Angle[] };
       setAngles(data.angles);
     } finally {
       setLoadingAngles(false);
     }
+  }
+
+  async function pickSuggestion(topic: string) {
+    const nextInput = { ...input, topic };
+    setInput({ topic });
+    await generateAngles(nextInput);
   }
 
   async function buildStoryboard(angle: Angle) {
@@ -112,6 +135,7 @@ export default function Home() {
       });
       const data = (await response.json()) as { production: ProductionPack };
       setProduction(data.production);
+      setActiveTab("layout");
     } finally {
       setLoadingProduction(false);
     }
@@ -127,116 +151,39 @@ export default function Home() {
   const teleprompter = exportTeleprompter(production);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(255,21,40,0.2),transparent_30%),radial-gradient(circle_at_70%_0%,rgba(40,184,255,0.08),transparent_24%),linear-gradient(145deg,#030406_0%,#0a0d14_48%,#05050a_100%)] text-slate-100">
+    <main className="min-h-screen overflow-hidden bg-[#06111b] text-slate-100">
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_35%_0%,rgba(255,42,62,0.18),transparent_24%),radial-gradient(circle_at_78%_18%,rgba(34,211,238,0.12),transparent_26%),linear-gradient(140deg,#07131f_0%,#06101a_45%,#03070d_100%)]" />
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 border-r border-white/10 bg-black/35 px-4 py-5 lg:block">
-          <div className="mb-8">
-            <Image
-              src="/brand/tubescript-studio-logo-header.png"
-              alt="TubeScript Studio"
-              width={310}
-              height={103}
-              priority
-              className="h-auto w-full object-contain drop-shadow-[0_0_22px_rgba(255,21,40,0.22)]"
-            />
-          </div>
-          <nav className="space-y-1">
-            {([
-              [Clapperboard, "Dashboard", true],
-              [Film, "Projects", false],
-              [BarChart3, "Analytics", false],
-              [Library, "Asset Library", false],
-              [Settings, "Settings", false]
-            ] satisfies [LucideIcon, string, boolean][]).map(([Icon, label, active]) => (
-              <button
-                key={label as string}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm transition ${
-                  active ? "border border-studio-red/55 bg-studio-red/12 text-white shadow-redglow" : "text-slate-400 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <Icon size={18} />
-                {label}
-              </button>
-            ))}
-          </nav>
-        </aside>
+        <Sidebar />
+        <section className="min-w-0 flex-1">
+          <TopBar reset={reset} />
+          <div className="mx-auto max-w-[1420px] px-4 py-5 md:px-6">
+            <WorkflowSteps hasAngles={angles.length > 0} hasProduction={Boolean(production)} />
 
-        <section className="flex-1">
-          <header className="sticky top-0 z-20 border-b border-white/10 bg-studio-ink/88 px-4 py-3 backdrop-blur md:px-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 lg:hidden">
-                <Menu />
-                <Image src="/brand/tubescript-studio-logo-header.png" alt="TubeScript Studio" width={190} height={63} className="h-9 w-auto object-contain" />
-              </div>
-              <div className="hidden max-w-xl flex-1 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-slate-400 md:flex">
-                <Search size={17} />
-                <span className="text-sm">Search projects, hooks, storyboards</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.04]">
-                  <Bell size={18} />
-                </button>
-                <button
-                  onClick={reset}
-                  className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
-                >
-                  Reset
-                </button>
-              </div>
-            </div>
-          </header>
-
-          <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-            <section className="mb-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-              <div>
-                <div className="mb-4 hidden max-w-[420px] lg:block">
-                  <Image
-                    src="/brand/tubescript-studio-logo-header.png"
-                    alt="TubeScript Studio"
-                    width={620}
-                    height={207}
-                    priority
-                    className="h-auto w-full object-contain drop-shadow-[0_0_30px_rgba(255,21,40,0.24)]"
-                  />
-                </div>
-                <p className="mb-2 text-xs uppercase tracking-[0.26em] text-studio-red">Creator production pipeline</p>
-                <h1 className="max-w-3xl text-3xl font-black leading-tight text-white md:text-5xl">
-                  Build the angle, research pack, script, and storyboard in one flow.
-                </h1>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Stat label="Words" value={scriptStats.words.toString()} icon={<FileText size={18} />} />
-                <Stat label="Speak Time" value={`${scriptStats.minutesLow}-${scriptStats.minutesHigh}m`} icon={<Timer size={18} />} />
-                <Stat label="Format" value={formatLabel[input.mode]} icon={<Clapperboard size={18} />} />
-              </div>
+            <section className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <GeneratorPanel input={input} setInput={setInput} generateAngles={() => generateAngles()} loading={loadingAngles} />
+              <SmartSuggestions onPick={pickSuggestion} loading={loadingAngles} />
             </section>
 
-            <Stepper hasAngles={angles.length > 0} hasProduction={Boolean(production)} />
+            <AngleGrid angles={angles} selectedAngle={selectedAngle} loading={loadingAngles} loadingProduction={loadingProduction} onSelect={buildStoryboard} />
 
-            <section className="mt-6 grid gap-5 xl:grid-cols-[360px_1fr]">
-              <ProjectPanel input={input} setInput={setInput} generateAngles={generateAngles} loading={loadingAngles} />
-
-              <div className="space-y-5">
-                <AngleGrid
-                  angles={angles}
-                  selectedAngle={selectedAngle}
-                  loading={loadingAngles}
-                  loadingProduction={loadingProduction}
-                  onSelect={buildStoryboard}
-                />
-
-                {production && selectedAngle ? (
-                  <ProductionWorkspace
-                    angle={selectedAngle}
-                    production={production}
-                    copied={copied}
-                    markdown={markdown}
-                    teleprompter={teleprompter}
-                    copyText={copyText}
-                  />
-                ) : null}
-              </div>
-            </section>
+            {production && selectedAngle ? (
+              <Blueprint
+                angle={selectedAngle}
+                production={production}
+                copied={copied}
+                markdown={markdown}
+                teleprompter={teleprompter}
+                copyText={copyText}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                regenerate={() => buildStoryboard(selectedAngle)}
+                scriptStats={scriptStats}
+                input={input}
+              />
+            ) : (
+              <EmptyBlueprint />
+            )}
           </div>
         </section>
       </div>
@@ -244,7 +191,88 @@ export default function Home() {
   );
 }
 
-function ProjectPanel({
+function Sidebar() {
+  return (
+    <aside className="hidden w-[238px] shrink-0 border-r border-sky-100/10 bg-[#081522]/95 px-3 py-4 shadow-[20px_0_55px_rgba(0,0,0,0.22)] lg:block">
+      <div className="mb-6 flex items-center gap-3 px-2">
+        <Image src="/brand/tubescript-studio-logo-header.png" alt="TubeScript Studio" width={184} height={61} priority className="h-12 w-auto object-contain" />
+      </div>
+      <nav className="space-y-2">
+        {navItems.map(([Icon, label, active]) => (
+          <button key={label} className={`navItem ${active ? "navItemActive" : ""}`}>
+            <Icon size={18} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+      <div className="mt-8 rounded-lg border border-sky-100/10 bg-[#0b1b2a] p-4">
+        <div className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
+          <Flame size={16} className="text-studio-red" />
+          Popular Types
+        </div>
+        <div className="space-y-2">
+          <span className="typePill bg-indigo-500/18 text-indigo-200 ring-indigo-400/35">Documentary</span>
+          <span className="typePill bg-emerald-500/18 text-emerald-200 ring-emerald-400/35">Tutorial</span>
+          <span className="typePill bg-orange-500/18 text-orange-200 ring-orange-400/35">Reaction</span>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function TopBar({ reset }: { reset: () => void }) {
+  return (
+    <header className="sticky top-0 z-30 border-b border-sky-100/10 bg-[#07131f]/92 px-4 py-4 backdrop-blur-xl md:px-6">
+      <div className="mx-auto flex max-w-[1420px] items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Menu className="lg:hidden" size={22} />
+          <div className="flex h-11 max-w-[630px] flex-1 items-center gap-3 rounded-lg border border-sky-100/15 bg-[#0b1c2d] px-4 text-slate-400 shadow-inner shadow-black/20">
+            <Search size={18} />
+            <span className="truncate text-sm">Search scripts, topics, or projects...</span>
+            <kbd className="ml-auto hidden rounded-md bg-white/10 px-2 py-1 text-xs text-slate-300 sm:block">Ctrl K</kbd>
+          </div>
+        </div>
+        <button className="hidden items-center gap-2 rounded-lg bg-studio-red px-5 py-3 text-sm font-black text-white shadow-redglow transition hover:brightness-110 sm:flex">
+          <Plus size={17} />
+          New Project
+        </button>
+        <button className="grid h-11 w-11 place-items-center rounded-lg border border-sky-100/10 bg-[#0b1c2d] text-slate-300">
+          <Bell size={18} />
+        </button>
+        <button onClick={reset} className="rounded-lg border border-sky-100/10 bg-[#0b1c2d] px-3 py-2 text-sm font-bold text-slate-200">
+          Reset
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function WorkflowSteps({ hasAngles, hasProduction }: { hasAngles: boolean; hasProduction: boolean }) {
+  const steps: [string, string, string, boolean][] = [
+    ["1", "Topic", "Enter a topic or get suggestions", true],
+    ["2", "Pick a Direction", "Choose 1 of 5 ideas", hasAngles],
+    ["3", "Script & Storyboard", "Get your full video plan", hasProduction]
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+      {steps.map(([number, title, caption, active], index) => (
+        <div key={title} className="contents">
+          <div className="flex items-center gap-3">
+            <div className={`stepNumber ${active ? "stepNumberActive" : ""}`}>{number}</div>
+            <div>
+              <p className="text-base font-black text-white">{title}</p>
+              <p className="text-xs text-slate-400">{caption}</p>
+            </div>
+          </div>
+          {index < steps.length - 1 ? <div className="hidden items-center text-slate-600 md:flex">→</div> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GeneratorPanel({
   input,
   setInput,
   generateAngles,
@@ -256,89 +284,88 @@ function ProjectPanel({
   loading: boolean;
 }) {
   return (
-    <aside className="h-fit rounded-lg border border-white/10 bg-studio-panel/82 p-4 shadow-2xl shadow-black/20">
-      <div className="mb-4 flex items-center gap-2">
-        <Wand2 className="text-studio-red" size={20} />
-        <h2 className="text-lg font-bold">Project Setup</h2>
+    <section className="panel p-5">
+      <div className="mb-4 flex items-start gap-3">
+        <Sparkles className="mt-1 text-studio-red" size={27} fill="currentColor" />
+        <div>
+          <h1 className="text-2xl font-black leading-tight md:text-3xl">Generate Your Next Video</h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
+            Enter a topic, or let TubeScript Studio suggest ideas based on what is trending, your niche, and proven formats.
+          </p>
+        </div>
       </div>
-
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Mode</label>
-      <div className="mb-4 grid grid-cols-2 gap-2">
-        {[
-          ["short", "YouTube Short"],
-          ["long", "Long-Form"]
-        ].map(([mode, label]) => (
-          <button
-            key={mode}
-            onClick={() => setInput({ mode: mode as VideoMode })}
-            className={`rounded-lg border px-3 py-3 text-sm font-semibold ${
-              input.mode === mode ? "border-studio-red bg-studio-red/18 text-white" : "border-white/10 bg-white/[0.03] text-slate-300"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Genre / Niche</label>
-      <select
-        value={input.niche}
-        onChange={(event) => setInput({ niche: event.target.value })}
-        className="mb-3 w-full rounded-lg border border-white/10 bg-studio-panel2 px-3 py-3 text-sm outline-none ring-studio-cyan/30 focus:ring-4"
-      >
-        {niches.map((niche) => (
-          <option key={niche}>{niche}</option>
-        ))}
-      </select>
-
-      <input
-        value={input.customNiche ?? ""}
-        onChange={(event) => setInput({ customNiche: event.target.value })}
-        placeholder="Custom niche"
-        className="mb-4 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-3 text-sm outline-none ring-studio-cyan/30 placeholder:text-slate-500 focus:ring-4"
-      />
-
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Seed Topic</label>
       <textarea
         value={input.topic ?? ""}
         onChange={(event) => setInput({ topic: event.target.value })}
         rows={4}
-        placeholder="Enter a rough topic or leave blank for Surprise Me."
-        className="mb-4 w-full resize-none rounded-lg border border-white/10 bg-black/20 px-3 py-3 text-sm outline-none ring-studio-cyan/30 placeholder:text-slate-500 focus:ring-4"
+        maxLength={500}
+        placeholder="What kind of video do you want to make? e.g. beginner camera guide, crypto update, small business tips"
+        className="min-h-[112px] w-full resize-none rounded-lg border border-sky-100/15 bg-[#081522] px-4 py-4 text-sm text-white outline-none ring-studio-red/25 placeholder:text-slate-500 focus:border-studio-red/60 focus:ring-4"
       />
-
-      <button
-        onClick={generateAngles}
-        disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-studio-red px-4 py-3 font-bold text-white shadow-redglow transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {loading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
-        {input.topic?.trim() ? "Generate 5 Angles" : "Surprise Me"}
-      </button>
-    </aside>
+      <div className="mt-2 text-right text-xs text-slate-500">{input.topic?.length ?? 0}/500</div>
+      <div className="mt-2 grid gap-3 xl:grid-cols-[1fr_230px]">
+        <div>
+          <p className="mb-2 text-xs font-bold text-slate-300">Video style / genre</p>
+          <div className="flex flex-wrap gap-2">
+            {formatStyles.map((style, index) => (
+              <button key={style} className={`formatChip ${index === 0 ? "formatChipActive" : ""}`}>
+                {index === 0 ? <Clapperboard size={14} /> : index === 2 ? <Star size={14} /> : <LayoutList size={14} />}
+                {style}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-2 text-xs font-bold text-slate-300">Niche</p>
+          <select
+            value={input.niche}
+            onChange={(event) => setInput({ niche: event.target.value })}
+            className="h-10 w-full rounded-lg border border-sky-100/15 bg-[#081522] px-3 text-sm text-slate-200 outline-none"
+          >
+            {niches.map((niche) => (
+              <option key={niche}>{niche}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <button onClick={generateAngles} disabled={loading} className="primaryButton min-w-[245px]">
+          {loading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
+          Generate 5 Ideas
+        </button>
+        <button onClick={generateAngles} disabled={loading} className="secondaryButton min-w-[210px]">
+          <Shuffle size={18} />
+          Pick For Me
+        </button>
+      </div>
+    </section>
   );
 }
 
-function Stepper({ hasAngles, hasProduction }: { hasAngles: boolean; hasProduction: boolean }) {
-  const steps = [
-    [Lightbulb, "Ideation", true],
-    [Search, "Context & Research", hasAngles],
-    [BookOpen, "Storyboard & Script", hasProduction],
-    [RefreshCcw, "Review & Loop", hasProduction]
-  ] satisfies [LucideIcon, string, boolean][];
-
+function SmartSuggestions({ onPick, loading }: { onPick: (topic: string) => void; loading: boolean }) {
   return (
-    <div className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.035] p-2 md:grid-cols-4">
-      {steps.map(([Icon, label, active]) => (
-        <div
-          key={label as string}
-          className={`flex items-center gap-3 rounded-md px-3 py-3 ${active ? "bg-studio-red/12 text-white" : "text-slate-500"}`}
-        >
-          <Icon size={18} className={active ? "text-studio-red" : ""} />
-          <span className="text-sm font-bold uppercase tracking-[0.12em]">{label}</span>
+    <aside className="panel p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Lightbulb size={20} className="text-amber-300" fill="currentColor" />
+          <h2 className="font-black">Smart Suggestions</h2>
         </div>
-      ))}
-    </div>
+        <button className="text-xs font-bold text-sky-300">See more →</button>
+      </div>
+      <p className="mb-4 text-sm text-slate-400">Not sure what to create? Try one of these:</p>
+      <div className="space-y-3">
+        {suggestions.map(([title, caption], index) => (
+          <button key={title} onClick={() => onPick(title)} disabled={loading} className="suggestionRow">
+            <div className={`suggestionThumb thumb${index + 1}`} />
+            <div className="min-w-0 flex-1 text-left">
+              <p className="line-clamp-2 text-sm font-black text-white">{title}</p>
+              <p className="mt-1 truncate text-xs text-slate-400">{caption}</p>
+            </div>
+            <ChevronRight size={18} />
+          </button>
+        ))}
+      </div>
+    </aside>
   );
 }
 
@@ -355,71 +382,93 @@ function AngleGrid({
   loadingProduction: boolean;
   onSelect: (angle: Angle) => void;
 }) {
-  if (loading) {
-    return (
-      <div className="grid min-h-[320px] place-items-center rounded-lg border border-white/10 bg-studio-panel/70">
-        <Loader2 className="animate-spin text-studio-green" size={34} />
-      </div>
-    );
-  }
-
-  if (!angles.length) {
-    return (
-      <div className="grid min-h-[320px] place-items-center rounded-lg border border-dashed border-white/15 bg-studio-panel/55 p-8 text-center">
+  return (
+    <section className="mt-5">
+      <div className="mb-3 flex items-end justify-between gap-3">
         <div>
-          <Lightbulb className="mx-auto mb-3 text-studio-cyan" size={34} />
-          <h2 className="mb-2 text-xl font-bold">Generate five production angles</h2>
-          <p className="max-w-md text-sm text-slate-400">Use a niche, a seed idea, or let the app surprise you with hook-ready concepts.</p>
+          <div className="flex items-center gap-2">
+            <Target size={28} className="text-studio-red" />
+            <h2 className="text-2xl font-black">Choose 1 of 5 Video Directions</h2>
+          </div>
+          <p className="mt-1 text-sm text-slate-400">Pick one concept to create a full script and storyboard.</p>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <section className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-      {angles.map((angle, index) => {
-        const active = selectedAngle?.id === angle.id;
-        return (
-          <article
-            key={angle.id}
-            className={`flex min-h-[270px] flex-col rounded-lg border p-4 transition ${
-              active ? "border-studio-red bg-studio-red/10 shadow-redglow" : "border-white/10 bg-studio-panel/82 hover:border-studio-red/50"
-            }`}
-          >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <span className="rounded-md bg-white/10 px-2 py-1 text-xs font-bold text-slate-200">#{index + 1}</span>
-              <span className="rounded-md border border-studio-cyan/30 bg-studio-cyan/10 px-2 py-1 text-xs font-bold text-studio-cyan">
-                {angle.type}
-              </span>
-            </div>
-            <h3 className="mb-3 text-xl font-black leading-snug text-white">{angle.title}</h3>
-            <p className="mb-3 text-sm leading-6 text-slate-300">{angle.hook}</p>
-            <p className="mb-4 text-sm text-slate-400">{angle.value}</p>
-            <div className="mt-auto flex items-center justify-between gap-3">
-              <span className="rounded-md bg-black/24 px-2 py-2 text-xs font-semibold text-slate-300">{formatLabel[angle.recommendedFormat]}</span>
-              <button
-                onClick={() => onSelect(angle)}
-                disabled={loadingProduction}
-                className="flex items-center gap-2 rounded-lg bg-studio-red px-3 py-2 text-sm font-black text-white hover:brightness-110 disabled:opacity-60"
-              >
-                {active ? <Check size={16} /> : <Clapperboard size={16} />}
-                {active && loadingProduction ? "Building" : "Select Angle"}
-              </button>
-            </div>
-          </article>
-        );
-      })}
+      {loading ? (
+        <div className="panel grid min-h-[245px] place-items-center">
+          <Loader2 className="animate-spin text-studio-red" size={34} />
+        </div>
+      ) : angles.length ? (
+        <div className="grid gap-4 xl:grid-cols-3">
+          {angles.map((angle, index) => (
+            <AngleCard key={angle.id} angle={angle} index={index} active={selectedAngle?.id === angle.id} loading={loadingProduction} onSelect={onSelect} />
+          ))}
+        </div>
+      ) : (
+        <div className="panel grid min-h-[245px] place-items-center p-8 text-center">
+          <div>
+            <Target className="mx-auto mb-3 text-studio-red" size={38} />
+            <h3 className="text-xl font-black">Generate five video directions</h3>
+            <p className="mt-2 max-w-md text-sm text-slate-400">Your angle cards will appear here with format, hook, value, and storyboard actions.</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
-function ProductionWorkspace({
+function AngleCard({
+  angle,
+  index,
+  active,
+  loading,
+  onSelect
+}: {
+  angle: Angle;
+  index: number;
+  active: boolean;
+  loading: boolean;
+  onSelect: (angle: Angle) => void;
+}) {
+  return (
+    <article className={`directionCard ${active ? "directionCardActive" : ""}`}>
+      <div className="absolute left-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-studio-red text-lg font-black text-white shadow-redglow">
+        {index + 1}
+      </div>
+      <div className={`ideaThumb ideaThumb${(index % 5) + 1}`}>
+        <span>{angle.type}</span>
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col p-4">
+        <h3 className="line-clamp-2 text-base font-black leading-tight text-white">{angle.title}</h3>
+        <p className="mt-2 line-clamp-3 text-sm leading-5 text-slate-300">{angle.hook}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="miniBadge">
+            <Clapperboard size={13} />
+            {formatLabel[angle.recommendedFormat]}
+          </span>
+          <span className="miniBadge">{angle.type}</span>
+        </div>
+        <p className="mt-3 text-xs leading-5 text-slate-400">Best for: {angle.value}</p>
+        <button onClick={() => onSelect(angle)} disabled={loading} className="chooseButton mt-auto">
+          {active && loading ? "Building" : "Choose This"}
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function Blueprint({
   angle,
   production,
   copied,
   markdown,
   teleprompter,
-  copyText
+  copyText,
+  activeTab,
+  setActiveTab,
+  regenerate,
+  scriptStats,
+  input
 }: {
   angle: Angle;
   production: ProductionPack;
@@ -427,85 +476,173 @@ function ProductionWorkspace({
   markdown: string;
   teleprompter: string;
   copyText: (label: string, text: string) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  regenerate: () => void;
+  scriptStats: { words: number; minutesLow: number; minutesHigh: number };
+  input: ProjectInput;
 }) {
   return (
-    <section className="space-y-5">
-      <div className="rounded-lg border border-white/10 bg-studio-panel/86 p-4">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-studio-red">Production pack</p>
-            <h2 className="text-2xl font-black">{angle.title}</h2>
+    <section className="panel mt-5 p-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500 text-white">
+            <Check size={23} />
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => copyText("Markdown", markdown)} className="actionButton">
-              <Download size={16} /> {copied === "Markdown" ? "Copied" : "Markdown"}
-            </button>
-            <button onClick={() => copyText("Teleprompter", teleprompter)} className="actionButton">
-              <Clipboard size={16} /> {copied === "Teleprompter" ? "Copied" : "Teleprompter"}
-            </button>
+          <div>
+            <h2 className="text-2xl font-black">Selected Video Blueprint</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Complete script, structure and storyboard for: <span className="text-slate-200">{angle.title}</span>
+            </p>
           </div>
         </div>
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          <InfoList title="Core Knowledge" items={production.research.coreKnowledge} />
-          <InfoList title="Media Ideas" items={production.research.mediaIdeas} />
-          <InfoList title="Shorts Safe Zones" items={production.safeZoneGuide} />
+        <div className="flex flex-wrap gap-2">
+          <button onClick={regenerate} className="secondaryButton px-3 py-2">
+            <RefreshCcw size={16} />
+            Regenerate
+          </button>
+          <button className="secondaryButton px-3 py-2">
+            <Bookmark size={16} />
+            Save Project
+          </button>
+          <button onClick={() => copyText("Markdown", markdown)} className="primaryButton px-3 py-2">
+            <Download size={16} />
+            {copied === "Markdown" ? "Copied" : "Export"}
+          </button>
         </div>
       </div>
-
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-studio-panel/86">
-        <div className="grid grid-cols-[120px_1.1fr_1.2fr_0.8fr] gap-0 border-b border-white/10 bg-white/[0.04] px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-400 max-xl:hidden">
-          <span>Time</span>
-          <span>Visual Direction</span>
-          <span>Audio / Spoken Script</span>
-          <span>Cue</span>
-        </div>
-        {production.storyboard.map((block) => (
-          <div
-            key={block.timestamp}
-            className="grid gap-3 border-b border-white/10 px-4 py-4 last:border-b-0 xl:grid-cols-[120px_1.1fr_1.2fr_0.8fr]"
-          >
-            <div className="font-black text-studio-cyan">{block.timestamp}</div>
-            <div>
-              <p className="text-sm leading-6 text-slate-200">{block.visual}</p>
-              <p className="mt-2 text-xs text-studio-amber">{block.retentionNote}</p>
-            </div>
-            <p className="text-sm leading-6 text-white">{block.script}</p>
-            <span className="h-fit rounded-md border border-white/10 bg-black/20 px-2 py-2 text-xs font-bold text-slate-300">{block.voiceoverCue}</span>
-          </div>
+      <div className="grid gap-2 md:grid-cols-4">
+        {([
+          ["layout", LayoutList, "Video Layout"],
+          ["script", FileText, "Script"],
+          ["storyboard", Grid2X2, "Storyboard"],
+          ["assets", ImageIcon, "Assets & Thumbnail"]
+        ] satisfies [string, LucideIcon, string][]).map(([id, Icon, label]) => (
+          <button key={id as string} onClick={() => setActiveTab(id as string)} className={`blueprintTab ${activeTab === id ? "blueprintTabActive" : ""}`}>
+            <Icon size={16} />
+            {label as string}
+          </button>
         ))}
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <InfoList title="Reference Searches" items={production.research.references.map((item) => `${item.label}: ${item.query}`)} />
-        <InfoList title="B-Roll & SFX" items={production.brollAndSfx} />
+      <div className="mt-3 grid gap-3 xl:grid-cols-[0.8fr_1.05fr_0.95fr]">
+        <StructurePanel production={production} stats={scriptStats} input={input} />
+        <ScriptPanel production={production} copied={copied} copyText={copyText} teleprompter={teleprompter} />
+        <StoryboardPanel production={production} />
       </div>
     </section>
   );
 }
 
-function InfoList({ title, items }: { title: string; items: string[] }) {
+function StructurePanel({ production, stats, input }: { production: ProductionPack; stats: { words: number; minutesLow: number; minutesHigh: number }; input: ProjectInput }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-black/18 p-4">
-      <h3 className="mb-3 text-sm font-black uppercase tracking-[0.14em] text-slate-300">{title}</h3>
-      <ul className="space-y-2">
-        {items.map((item) => (
-          <li key={item} className="flex gap-2 text-sm leading-6 text-slate-300">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-studio-red" />
-            {item}
-          </li>
+    <div className="blueprintPanel">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-black">Video Structure</h3>
+        <span className="miniBadge">
+          <Timer size={13} />
+          {stats.words} words
+        </span>
+      </div>
+      <div className="space-y-3">
+        {production.storyboard.map((block, index) => (
+          <div key={block.timestamp} className="flex gap-3">
+            <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-black ${index > 5 ? "bg-amber-500/80" : "bg-emerald-500/80"}`}>
+              {index + 1}
+            </div>
+            <div>
+              <p className="text-sm font-black text-white">{block.timestamp}</p>
+              <p className="line-clamp-2 text-xs leading-5 text-slate-400">{block.retentionNote || block.voiceoverCue}</p>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <StatTile label="Mode" value={formatLabel[input.mode]} />
+        <StatTile label="Speak Time" value={`${stats.minutesLow}-${stats.minutesHigh}m`} />
+      </div>
     </div>
   );
 }
 
-function Stat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+function ScriptPanel({
+  production,
+  copied,
+  copyText,
+  teleprompter
+}: {
+  production: ProductionPack;
+  copied: string | null;
+  copyText: (label: string, text: string) => void;
+  teleprompter: string;
+}) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.045] p-4">
-      <div className="mb-3 text-studio-cyan">{icon}</div>
-      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    <div className="blueprintPanel">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-black">Script Excerpt</h3>
+        <button onClick={() => copyText("Teleprompter", teleprompter)} className="tinyButton">
+          <Clipboard size={14} />
+          {copied === "Teleprompter" ? "Copied" : "Copy All"}
+        </button>
+      </div>
+      <div className="space-y-3">
+        {production.storyboard.slice(0, 4).map((block) => (
+          <article key={block.timestamp} className="scriptBlock">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-sm font-black text-white">{block.timestamp}</p>
+              <span className="text-slate-500">...</span>
+            </div>
+            <p className="text-[11px] font-black uppercase tracking-wide text-sky-300">{block.voiceoverCue}</p>
+            <p className="mt-1 line-clamp-4 text-xs leading-5 text-slate-300">{block.script}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StoryboardPanel({ production }: { production: ProductionPack }) {
+  return (
+    <div className="blueprintPanel">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-black">Storyboard</h3>
+        <button className="tinyButton">View All</button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {production.storyboard.slice(0, 4).map((block, index) => (
+          <article key={block.timestamp} className="storyTile">
+            <div className={`storyThumb storyThumb${(index % 4) + 1}`} />
+            <p className="mt-2 line-clamp-2 text-xs font-black text-white">
+              {index + 1}. {block.timestamp}
+            </p>
+            <p className="mt-1 line-clamp-3 text-[11px] leading-4 text-slate-400">{block.visual}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EmptyBlueprint() {
+  return (
+    <section className="panel mt-5 p-6">
+      <div className="flex items-center gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-slate-700 text-slate-300">
+          <FileText size={22} />
+        </div>
+        <div>
+          <h2 className="text-xl font-black">Selected Video Blueprint</h2>
+          <p className="mt-1 text-sm text-slate-400">Choose a direction to unlock the script, storyboard, research notes, assets, exports, and teleprompter text.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-sky-100/10 bg-[#07131f] p-3">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-1 text-sm font-black text-white">{value}</p>
     </div>
   );
 }
