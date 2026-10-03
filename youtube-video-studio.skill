@@ -1,0 +1,63 @@
+I have created and saved the new **`youtube-video-studio`** skill.
+
+### What This Skill Does
+
+Whenever you want to brainstorm, write, or plan content for your YouTube channel, this skill will automatically:
+
+youtube-video-studio
+Generates YouTube Short and long-form video concepts, 5-topic angle selections, background research, and minute-by-minute scripts with visual storyboards. Use when the user asks to plan, script, storyboard, or outline YouTube videos, Shorts, tech/cybersecurity tutorials, or content ideas.
+
+Instructions
+YouTube Video Studio
+A structured workflow to produce complete YouTube video packages for Shorts and standard long-form videos.
+
+When to Use
+Brainstorming YouTube video ideas or angles (5 curated options).
+Developing scripts, background research, and reference links for a topic.
+Generating a minute-by-minute or beat-by-beat storyboard with spoken audio, visual direction, and B-roll/overlay cues
+
+Multi-Phase Workflow
+Phase 1: Topic Selection (5 Distinct Angles)
+When a user provides a niche, topic idea, or requests suggestions:
+
+Provide 5 clearly differentiated angles/hooks, such as:
+The Beginner Quick-Start: Accessible, clear, and reassuring.
+The Myth-Buster / Threat Breakdown: High-stakes curiosity or debunking common errors.
+The Deep-Dive / Comparison: Direct shootout between tools, methods, or devices.
+The Actionable Checklist / Tutorial: Immediate step-by-step utility.
+The Unpopular Opinion / Trend Forecast: Contrarian take on current trends.
+For each angle, include:
+Working title hook
+1-sentence value proposition
+Recommended format (Short vs. Long-form)
+Pause or let the user choose which angle to flesh out. If the user already provided a specific topic, move directly into production for that topic.
+Phase 2: Background Research & Media Links
+Before scripting, assemble the context:
+
+Core Knowledge & Key Facts: 3-5 technical points, facts, or security best practices that must be accurate.
+Reference & Verification Links: Search terms or real sources for verification.
+Visual Assets & B-Roll Suggestions: Suggested video clips, screen recordings (e.g. terminal, dashboard, hardware close-ups), stock footage, and graphics to run as overlays while speaking over them.
+Phase 3: The Script & Storyboard Layout
+Format the script based on the format chosen:
+
+YouTube Shorts (30-60 Seconds)
+Divide into fast-paced pacing blocks:
+
+00:00 - 00:03 | Hook: High-retention question, bold visual, or curiosity gap.
+00:03 - 00:15 | The Stakes / Setup: Why this matters right now.
+00:15 - 00:45 | Core Value / Demonstration: The 2-3 essential steps or revelations.
+00:45 - 00:60 | Payoff & Call-to-Action / Loop: Smooth loop hook or clear engagement question.
+Standard Long-Form (Minute-by-Minute Outline)
+Divide into timestamped blocks (e.g., 00:00 - 01:00, 01:00 - 02:30, etc.).
+
+Storyboard Table Format
+
+For every video, present the production plan in a structured storyboard table:
+
+TimestampVisual Direction & OverlaysSpoken Voiceover / Audio ScriptVoiceover Cue00:00 - 00:30Camera on host talking to lens, lower-third graphic pop-in."Exact word-for-word text to speak..."Host on camera00:30 - 01:15Screen recording of tool dashboard with zoomed crop on settings."Exact word-for-word text explaining what is on screen..."Voiceover over video clip
+
+Key Guidelines
+
+Include precise cues for when the creator speaks directly to camera versus talking over external video clips/B-roll.
+Keep spoken pacing natural (~130-150 words per minute).
+Ensure cybersecurity, tech, and software explanations remain practical, safe, and accurate.

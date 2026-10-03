@@ -1,0 +1,81 @@
+I have created and saved the complementary skill: youtube-shorts-retention-engineer.
+How Your Two Video Skills Work Together
+Skill
+Primary Focus
+Best Used For
+youtube-video-studio
+End-to-End Production & Outlines
+5-topic angle selection, background research, links, and minute-by-minute scripts for both Shorts and standard long-form videos.
+youtube-shorts-retention-engineer
+Algorithm & Retention Optimization
+Crafting 3-second hook variations (A/B testing), seamless circular loops that re-trigger views, micro-pacing edits (15–45s), and vertical UI safe-zone formatting.
+
+
+
+
+youtube-shorts-retention-engineer
+
+Optimizes YouTube Shorts for maximum algorithm performance and retention. Generates 3-second visual and spoken hook variations, retention pacing curves, seamless audio loop transitions, and UI-safe on-screen caption layouts. Use when the user asks to optimize a Short for retention, write viral hooks, craft seamless loops, or fix swipe-away rate.
+Instructions
+YouTube Shorts Retention Engineer
+A specialized skill for engineering high-retention, low-swipe-away YouTube Shorts (15 to 45 seconds).
+When to Use
+Writing or optimizing YouTube Shorts hooks to beat the initial swipe-away threshold.
+Designing seamless circular audio/visual loops where the ending connects back into the opening sentence.
+Structuring 15-45 second micro-scripts optimized for average percentage viewed (APV) and replay rate.
+Auditing scripts for on-screen vertical "UI Safe Zones" (avoiding overlapping YouTube's native action buttons, title, or captions).
+Core Principles
+1. The 1-Second Rule (Beat the Swipe-Away)
+The feed decides whether to promote a Short within the first test batch based primarily on whether the viewer swiped away or chose to view:
+Zero Intro Fluff: Never start with "Hey guys", "In this video", or channel introductions.
+Result/Conflict First: State the payoff, reveal the final artifact, or show the error on screen within frame one.
+Visual Motion: Open on action, a bold hardware/screen zoom, or a high-contrast text prompt centered on screen.
+2. Micro-Retention Pacing (15 - 45 Seconds)
+Explainer / Micro-Tutorial: Target 25 to 45 seconds.
+Quick Hack / Curiosity / Reveal: Target 18 to 28 seconds.
+Rule of Visual Refresh: Change camera angle, insert B-roll, pop a keyword graphic, or adjust zoom every 2.5 to 4 seconds to reset viewer attention.
+3. The Seamless Loop Formula
+To trigger rewatches and push retention past 100%:
+Ending Sentence Anchor: End the video on an incomplete phrase or setup question.
+Opening Sentence Payoff: The first line of the video should directly answer or resolve the final line.
+Example Ending: "...and that is exactly why you should never trust..."
+Example Hook (Beginning): "...a public USB charging station without a data blocker."
+Output Structure
+When asked to optimize, hook, or build a retention plan for a Short, produce the following 4 sections:
+1. The 3 Hook Variations (A/B/C Test)
+Provide three distinct 3-second opening hooks:
+The Negative / Fear of Loss Hook: "If you have this setting turned on, your accounts are vulnerable..."
+The High-Speed Demonstration Hook: "Watch what happens when I plug this unknown drive into an isolated sandbox..."
+The Contrarian / Myth-Bust Hook: "Stop changing your passwords every 30 days. Here is what security standards actually say..."
+2. Spoken Script with Visual Beat Breakdown
+Present a clean, rapid-fire storyboard table:
+
+Second
+Visual Action & Safe-Zone Text Overlay
+Spoken Audio (Word-for-Word)
+Pacing / Retention Note
+00:00 - 00:03
+Host holds device to lens; text pop: "CHECK THIS NOW" (Center frame)
+"This one default router setting leaves your entire home network wide open."
+Frame 1 hook; immediate problem statement.
+00:03 - 00:12
+Screen recording shows admin login screen; red box around UPnP toggle.
+"It’s called UPnP, and malicious devices can use it to poke holes straight through your firewall."
+Visual proof; high information density.
+00:12 - 00:25
+Over-the-shoulder typing; clicks "Disable" in dashboard.
+"Log into your router gateway, head to Advanced Settings, and toggle UPnP off right now."
+Actionable instruction; viewer follows along.
+00:25 - 00:30
+Host back on camera; smiling, pointing forward.
+"...which is how you easily stop hackers from slipping right past..."
+Seamless Loop Setup: Flows directly into opening hook.
+
+3. UI Safe Zone & Captions Guide
+Safe Center: Keep all primary text overlays, faces, and graphics inside the middle 60% vertical safe box.
+Danger Zones: Keep text clear of the right 15% (Like, Comment, Share buttons) and the bottom 20% (Channel handle, sound title, native captions bar).
+Caption Style: 2-4 words per line, bold, centered, synchronized to spoken cadence.
+4. B-Roll & Sound FX (SFX) Cues
+Key SFX suggestions (e.g., subtle whoosh on topic cut, glitch sound on error highlight, click on toggle).
+Free/accessible stock footage or screen capture prompts to keep retention high without expensive production.
+See less

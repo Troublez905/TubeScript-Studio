@@ -1,0 +1,52 @@
+You are an expert full-stack developer and UI/UX designer. Build a complete, responsive web application called "TubeScript Studio" designed to streamline end-to-end video creation for YouTube Shorts and long-form YouTube videos.
+
+---
+
+### Core Objectives & Workflow
+The app guides creators through a 3-stage pipeline:
+1. **Topic Ideation & Angle Selection (5 Options)**
+2. **Context, Research & Media Curation**
+3. **Structured Minute-by-Minute Script & Storyboard**
+
+---
+
+### Feature Requirements
+
+#### 1. Project Setup & Idea Generator
+- **Mode Toggle:** Switch between "YouTube Short" (vertical 9:16, 30–60s) and "Standard Long-Form" (horizontal 16:9, 3–15+ min).
+- **Genre/Niche Picker:** Dropdown with presets (Tech & Reviews, Cybersecurity, Gaming, Tutorials, Storytelling/Vlog, Business/Finance) plus an "Enter Custom Niche" field.
+- **Input Flexibility:**
+  - Option A: Creator clicks "Surprise Me / Auto-Generate 5 Angles" based on the selected genre.
+  - Option B: Creator inputs a rough topic/seed idea (e.g., "Best Hardware Security Keys in 2026"), and the app generates 5 distinct viral hooks/angles (e.g., Beginner Guide, Extreme Comparison, Threat Breakdown, Budget Alternatives, Common Mistakes).
+- **Selection Card:** Interactive selection where clicking one of the 5 options locks it in and advances to production layout.
+
+#### 2. Research, Background Knowledge & Media Hub
+- **Core Knowledge Summary:** 3–5 bullet points of crucial background context, facts, and technical accuracy notes.
+- **Reference & Inspiration Links:**
+  - Direct links/search references to credible articles and competitor videos.
+  - Suggested B-roll clips, stock footage concepts, and visual assets the creator can play on-screen while talking over them.
+- **B-Roll & Overlay Notes:** Concrete suggestions for screen recordings, animations, hardware close-ups, or reaction inserts.
+
+#### 3. Storyboard & Timestamped Script Layout
+- **Visual Storyboard Interface:** A clean two-column grid (Visual Direction vs. Audio / Spoken Script).
+- **Timing Structure:**
+  - **Shorts:** Broken down into 5–15 second blocks: Hook (0–3s), Retention Spike (3–15s), Core Meat (15–45s), Call to Action / Loop (45–60s).
+  - **Standard Videos:** Timestamped minute-by-minute outline (e.g., `00:00–01:00 Hook & Intro`, `01:00–02:30 Problem Setup`, etc.).
+- **Per-Block Details:**
+  - **What to Say (Script/Talking Points):** Word-for-word voiceover script with natural inflection notes.
+  - **What to Show (On-Screen Action):** Camera angles, B-roll clips, text overlays, graphic callouts, sound effects (SFX).
+  - **Over-the-Video Voiceover Cue:** Clear flags indicating where spoken audio plays over external video clips.
+
+#### 4. Export & Utility Tools
+- One-click copy for the entire script or storyboard.
+- Export to Markdown, Teleprompter plain text, or PDF outline.
+- Built-in estimated word count and speaking-time calculator (~130–150 words per minute).
+
+---
+
+### Tech Stack Recommendation
+- **Framework:** Next.js (React) + Tailwind CSS + Lucide Icons + Shadcn UI.
+- **Backend/AI:** Serverless API routes calling an LLM (Gemini 1.5 Pro / GPT-4o / Claude 3.5 Sonnet) with structured JSON schemas.
+- **State Management:** Zustand or React State with local storage persistence so scripts are not lost on refresh.
+
+Build a functional prototype starting with the clean UI dashboard and API routes handling the 5-idea generator and the storyboard output.
