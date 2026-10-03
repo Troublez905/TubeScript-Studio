@@ -169,6 +169,39 @@ textarea {
   color: #cbd5e1;
 }
 
+.leaderRow,
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(186, 230, 253, 0.12);
+  border-radius: 0.55rem;
+  background: rgba(7, 19, 31, 0.74);
+  padding: 0.75rem;
+  color: #cbd5e1;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.leaderRow:hover,
+.userRow:hover {
+  border-color: rgba(255, 21, 40, 0.45);
+  background: rgba(12, 30, 47, 0.92);
+  transform: translateY(-1px);
+}
+
+.leaderRank {
+  display: grid;
+  height: 2rem;
+  width: 2rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 21, 40, 0.18);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 1000;
+}
+
 .suggestionThumb,
 .ideaThumb,
 .storyThumb {

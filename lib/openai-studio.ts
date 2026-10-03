@@ -97,6 +97,7 @@ export async function generateAngles(input: ProjectInput): Promise<{ angles: Ang
           content: JSON.stringify({
             app: "TubeScript Studio",
             mode: input.mode,
+            normalLength: input.mode === "long" ? input.normalLength : null,
             niche,
             topic: input.topic || "Surprise me with a strong topic for this niche.",
             requiredAngleTypes: [
@@ -109,6 +110,7 @@ export async function generateAngles(input: ProjectInput): Promise<{ angles: Ang
             instructions: [
               "Write hooks that feel native to YouTube creators, not generic marketing copy.",
               "For Shorts, include a 3-second hook synopsis that avoids intro fluff.",
+              "For normal videos, assume the selected target length is 5, 10, or 30 minutes only. Never suggest a normal video longer than 30 minutes.",
               "Use practical, accurate wording for tech, cybersecurity, software, and creator workflows."
             ]
           })
@@ -159,7 +161,7 @@ export async function generateProductionPack(
             skillBehaviors: [
               "Use the youtube-video-studio workflow: background facts, references, B-roll, and timestamped visual/audio storyboard.",
               "Use the youtube-shorts-retention-engineer workflow for Shorts: 1-second rule, visual refresh every 2.5-4 seconds, safe-zone captions, seamless loop ending.",
-              "For long-form videos, create a minute-by-minute or section-by-section outline with word-for-word spoken script."
+              `For normal videos, create a section-by-section outline targeting ${input.normalLength || 10} minutes. Do not exceed 30 minutes.`
             ],
             constraints: [
               "Keep claims grounded and include reference search queries for verification.",

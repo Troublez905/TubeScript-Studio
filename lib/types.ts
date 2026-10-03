@@ -1,4 +1,5 @@
 export type VideoMode = "short" | "long";
+export type NormalVideoLength = 5 | 10 | 30;
 
 export type Angle = {
   id: string;
@@ -35,6 +36,7 @@ export type ProductionPack = {
 
 export type ProjectInput = {
   mode: VideoMode;
+  normalLength: NormalVideoLength;
   niche: string;
   customNiche?: string;
   topic?: string;

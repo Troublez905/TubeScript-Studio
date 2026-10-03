@@ -54,6 +54,7 @@ export function buildFallbackProductionPack(angle: Angle, input: ProjectInput): 
   const mode = input.mode || angle.recommendedFormat;
   const niche = effectiveNiche(input);
   const title = angle.title;
+  const targetLength = input.normalLength || 10;
   const shortBlocks = [
     ["00:00 - 00:03", "Open on the final visual result with a punch-in zoom and centered caption.", angle.hook, "Host on camera", "Frame-one payoff and conflict."],
     ["00:03 - 00:12", "Cut to screen recording or object close-up with one red callout box.", `The reason this matters is simple: ${angle.value.toLowerCase()}`, "Voiceover over clip", "Fast context without intro fluff."],
@@ -63,10 +64,10 @@ export function buildFallbackProductionPack(angle: Angle, input: ProjectInput): 
   ];
   const longBlocks = [
     ["00:00 - 01:00", "Cold open with the strongest proof shot, then host frames the promise.", `Today we are breaking down ${title}. By the end, you will know what matters, what is hype, and what to do next.`, "Host on camera", "Clear promise before context."],
-    ["01:00 - 02:30", "Timeline graphic and 3 key terms on screen.", `The background is important because ${angle.value.toLowerCase()} We will keep this practical and skip the theory that does not change your decision.`, "Voiceover over graphics", "Build trust with useful context."],
-    ["02:30 - 05:00", "Screen recording, product shots, or example clips arranged as a comparison.", "Here is the real test: does this help the viewer make a better choice, faster? Watch how each option performs when the pressure is real.", "Voiceover over examples", "Demonstration carries the middle."],
-    ["05:00 - 07:30", "Host reacts to the result, then shows a saveable checklist.", "The takeaway is not just what won. It is the decision rule you can reuse the next time this topic comes up.", "Host on camera", "Reframes details into repeatable value."],
-    ["07:30 - 09:00", "End card with next-video teaser and pinned-comment prompt.", "If you want the deeper test, I will put the sources and the checklist in the description. The next video should compare the riskiest edge case.", "Host on camera", "Soft CTA tied to value."]
+    [`01:00 - ${targetLength >= 10 ? "03:00" : "02:00"}`, "Timeline graphic and 3 key terms on screen.", `The background is important because ${angle.value.toLowerCase()} We will keep this practical and skip the theory that does not change your decision.`, "Voiceover over graphics", "Build trust with useful context."],
+    [`${targetLength >= 10 ? "03:00" : "02:00"} - ${targetLength >= 30 ? "12:00" : targetLength >= 10 ? "06:00" : "03:30"}`, "Screen recording, product shots, or example clips arranged as a comparison.", "Here is the real test: does this help the viewer make a better choice, faster? Watch how each option performs when the pressure is real.", "Voiceover over examples", "Demonstration carries the middle."],
+    [`${targetLength >= 30 ? "12:00" : targetLength >= 10 ? "06:00" : "03:30"} - ${targetLength >= 30 ? "24:00" : targetLength >= 10 ? "08:30" : "04:30"}`, "Host reacts to the result, then shows a saveable checklist.", "The takeaway is not just what won. It is the decision rule you can reuse the next time this topic comes up.", "Host on camera", "Reframes details into repeatable value."],
+    [`${targetLength >= 30 ? "24:00" : targetLength >= 10 ? "08:30" : "04:30"} - ${targetLength.toString().padStart(2, "0")}:00`, "End card with next-video teaser and pinned-comment prompt.", "If you want the deeper test, I will put the sources and the checklist in the description. The next video should compare the riskiest edge case.", "Host on camera", "Soft CTA tied to value."]
   ];
   const rows = (mode === "short" ? shortBlocks : longBlocks).map(
     ([timestamp, visual, script, voiceoverCue, retentionNote]) => ({
@@ -84,6 +85,7 @@ export function buildFallbackProductionPack(angle: Angle, input: ProjectInput): 
         `Verify all claims about ${title} against current primary or trusted sources before recording.`,
         `Keep the creator promise narrow: one clear decision, workflow, or misconception per video.`,
         `Use 130-150 spoken words per minute for comfortable pacing.`,
+        mode === "long" ? `Target a normal YouTube video length of ${targetLength} minutes; do not exceed 30 minutes.` : "Target a short vertical video with fast pacing.",
         mode === "short"
           ? "Open with the result or conflict in the first second; avoid greetings and channel intros."
           : "Give the viewer a reason to stay before introducing background context."

@@ -16,6 +16,7 @@ import {
   ImageIcon,
   LayoutList,
   Lightbulb,
+  Link2,
   Loader2,
   Menu,
   MonitorPlay,
@@ -28,6 +29,7 @@ import {
   Star,
   Target,
   Timer,
+  Trophy,
   Zap
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -37,7 +39,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { exportMarkdown, exportTeleprompter } from "@/lib/export";
 import { formatLabel, wordsAndMinutes } from "@/lib/studio-data";
-import type { Angle, ProductionPack, ProjectInput } from "@/lib/types";
+import type { Angle, NormalVideoLength, ProductionPack, ProjectInput, VideoMode } from "@/lib/types";
 
 const niches = ["Tech & Reviews", "Cybersecurity", "Gaming", "Tutorials", "Storytelling/Vlog", "Business/Finance"];
 const formatStyles = ["Tutorial", "Explainer", "Review", "Listicle", "Storytime", "Case Study"];
@@ -46,6 +48,31 @@ const suggestions = [
   ["How to stay consistent on YouTube", "Workflow and schedule system"],
   ["Tools that actually help YouTubers grow", "Creator stack comparison"]
 ];
+const randomIdeaPool = [
+  "Faceless YouTube channels that can still grow in 2026",
+  "How to make a cinematic phone video with no budget",
+  "Best AI tools for creators who hate editing",
+  "Why most new channels fail before 100 subscribers",
+  "A complete beginner guide to filming tutorials at home",
+  "How to turn one long video into ten Shorts"
+];
+const topTopics = [
+  ["Beginner camera setup", 12842, "Gear, lighting, and first-video confidence"],
+  ["AI tools for creators", 11036, "Editing, titles, repurposing, and workflow"],
+  ["How to grow on YouTube", 9821, "Strategy, consistency, and packaging"],
+  ["Faceless channel ideas", 8744, "Niches, formats, and production systems"],
+  ["Shorts hook formulas", 7930, "Retention-first vertical video ideas"],
+  ["Budget microphone tests", 6818, "Creator gear comparisons"],
+  ["Video editing workflow", 6411, "Batch editing and reusable templates"],
+  ["Tutorial structure", 5986, "Step-by-step educational scripting"]
+] as const;
+const topUsers = [
+  ["MayaCreates", 42, "Camera setup, tutorial structure, editing workflows"],
+  ["TechNorth", 37, "AI tools, security keys, creator software"],
+  ["StudioJay", 31, "Shorts hooks, faceless channel ideas"],
+  ["NiaVlogs", 28, "Consistency systems, storytelling"],
+  ["GearLab905", 24, "Mics, cameras, lighting tests"]
+] as const;
 const navItems = [
   [Zap, "Create", true],
   [History, "History", false],
@@ -61,15 +88,30 @@ type StudioState = {
   angles: Angle[];
   selectedAngle: Angle | null;
   production: ProductionPack | null;
+  savedProjects: SavedProject[];
+  finalVideoUrl: string;
   setInput: (input: Partial<ProjectInput>) => void;
   setAngles: (angles: Angle[]) => void;
   selectAngle: (angle: Angle) => void;
   setProduction: (production: ProductionPack) => void;
+  setFinalVideoUrl: (url: string) => void;
+  saveProject: (project: SavedProject) => void;
   reset: () => void;
+};
+
+type SavedProject = {
+  id: string;
+  title: string;
+  topic: string;
+  mode: VideoMode;
+  normalLength: NormalVideoLength;
+  finalVideoUrl?: string;
+  createdAt: string;
 };
 
 const initialInput: ProjectInput = {
   mode: "short",
+  normalLength: 10,
   niche: "Cybersecurity",
   topic: "Best hardware security keys in 2026"
 };
@@ -81,18 +123,25 @@ const useStudio = create<StudioState>()(
       angles: [],
       selectedAngle: null,
       production: null,
+      savedProjects: [],
+      finalVideoUrl: "",
       setInput: (input) => set((state) => ({ input: { ...state.input, ...input } })),
       setAngles: (angles) => set({ angles, selectedAngle: null, production: null }),
       selectAngle: (angle) => set({ selectedAngle: angle }),
       setProduction: (production) => set({ production }),
-      reset: () => set({ input: initialInput, angles: [], selectedAngle: null, production: null })
+      setFinalVideoUrl: (finalVideoUrl) => set({ finalVideoUrl }),
+      saveProject: (project) =>
+        set((state) => ({
+          savedProjects: [project, ...state.savedProjects.filter((item) => item.id !== project.id)].slice(0, 12)
+        })),
+      reset: () => set({ input: initialInput, angles: [], selectedAngle: null, production: null, finalVideoUrl: "" })
     }),
     { name: "tubescript-studio-v1" }
   )
 );
 
 export default function Home() {
-  const { input, angles, selectedAngle, production, setInput, setAngles, selectAngle, setProduction, reset } = useStudio();
+  const { input, angles, selectedAngle, production, savedProjects, finalVideoUrl, setInput, setAngles, selectAngle, setProduction, setFinalVideoUrl, saveProject, reset } = useStudio();
   const [loadingAngles, setLoadingAngles] = useState(false);
   const [loadingProduction, setLoadingProduction] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -124,6 +173,15 @@ export default function Home() {
     await generateAngles(nextInput);
   }
 
+  async function chooseForMe() {
+    const topic = randomIdeaPool[Math.floor(Math.random() * randomIdeaPool.length)];
+    const mode: VideoMode = Math.random() > 0.45 ? "short" : "long";
+    const normalLength: NormalVideoLength = ([5, 10, 30] as const)[Math.floor(Math.random() * 3)];
+    const nextInput = { ...input, topic, mode, normalLength };
+    setInput({ topic, mode, normalLength });
+    await generateAngles(nextInput);
+  }
+
   async function buildStoryboard(angle: Angle) {
     selectAngle(angle);
     setLoadingProduction(true);
@@ -135,6 +193,7 @@ export default function Home() {
       });
       const data = (await response.json()) as { production: ProductionPack };
       setProduction(data.production);
+      setFinalVideoUrl("");
       setActiveTab("layout");
     } finally {
       setLoadingProduction(false);
@@ -149,6 +208,7 @@ export default function Home() {
 
   const markdown = exportMarkdown(selectedAngle, production);
   const teleprompter = exportTeleprompter(production);
+  const shareLink = selectedAngle ? `https://tubescript-studio.vercel.app/?idea=${encodeURIComponent(selectedAngle.title)}` : "https://tubescript-studio.vercel.app/";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#06111b] text-slate-100">
@@ -161,9 +221,11 @@ export default function Home() {
             <WorkflowSteps hasAngles={angles.length > 0} hasProduction={Boolean(production)} />
 
             <section className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <GeneratorPanel input={input} setInput={setInput} generateAngles={() => generateAngles()} loading={loadingAngles} />
+              <GeneratorPanel input={input} setInput={setInput} generateAngles={() => generateAngles()} chooseForMe={chooseForMe} loading={loadingAngles} />
               <SmartSuggestions onPick={pickSuggestion} loading={loadingAngles} />
             </section>
+
+            <CommunityShowcase />
 
             <AngleGrid angles={angles} selectedAngle={selectedAngle} loading={loadingAngles} loadingProduction={loadingProduction} onSelect={buildStoryboard} />
 
@@ -180,10 +242,15 @@ export default function Home() {
                 regenerate={() => buildStoryboard(selectedAngle)}
                 scriptStats={scriptStats}
                 input={input}
+                finalVideoUrl={finalVideoUrl}
+                setFinalVideoUrl={setFinalVideoUrl}
+                saveProject={saveProject}
+                shareLink={shareLink}
               />
             ) : (
               <EmptyBlueprint />
             )}
+            <SavedProjects projects={savedProjects} />
           </div>
         </section>
       </div>
@@ -276,11 +343,13 @@ function GeneratorPanel({
   input,
   setInput,
   generateAngles,
+  chooseForMe,
   loading
 }: {
   input: ProjectInput;
   setInput: (input: Partial<ProjectInput>) => void;
   generateAngles: () => void;
+  chooseForMe: () => void;
   loading: boolean;
 }) {
   return (
@@ -288,9 +357,9 @@ function GeneratorPanel({
       <div className="mb-4 flex items-start gap-3">
         <Sparkles className="mt-1 text-studio-red" size={27} fill="currentColor" />
         <div>
-          <h1 className="text-2xl font-black leading-tight md:text-3xl">Generate Your Next Video</h1>
+          <h1 className="text-2xl font-black leading-tight md:text-3xl">Enter Your Topic, Genre, Or Idea</h1>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
-            Enter a topic, or let TubeScript Studio suggest ideas based on what is trending, your niche, and proven formats.
+            Submit your idea to get 5 YouTube concepts, or let TubeScript Studio choose the topic for you.
           </p>
         </div>
       </div>
@@ -328,15 +397,91 @@ function GeneratorPanel({
           </select>
         </div>
       </div>
+      <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr]">
+        <div>
+          <p className="mb-2 text-xs font-bold text-slate-300">Video type</p>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              ["short", "Short"],
+              ["long", "Normal"]
+            ] satisfies [VideoMode, string][]).map(([mode, label]) => (
+              <button key={mode} onClick={() => setInput({ mode })} className={`formatChip justify-center ${input.mode === mode ? "formatChipActive" : ""}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={input.mode === "long" ? "" : "opacity-45"}>
+          <p className="mb-2 text-xs font-bold text-slate-300">Normal video length</p>
+          <div className="grid grid-cols-3 gap-2">
+            {([5, 10, 30] as const).map((minutes) => (
+              <button
+                key={minutes}
+                disabled={input.mode !== "long"}
+                onClick={() => setInput({ normalLength: minutes })}
+                className={`formatChip justify-center ${input.normalLength === minutes && input.mode === "long" ? "formatChipActive" : ""}`}
+              >
+                {minutes} min
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       <div className="mt-5 flex flex-wrap gap-3">
         <button onClick={generateAngles} disabled={loading} className="primaryButton min-w-[245px]">
           {loading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
-          Generate 5 Ideas
+          Submit
         </button>
-        <button onClick={generateAngles} disabled={loading} className="secondaryButton min-w-[210px]">
+        <button onClick={chooseForMe} disabled={loading} className="secondaryButton min-w-[210px]">
           <Shuffle size={18} />
-          Pick For Me
+          Choose For Me!
         </button>
+      </div>
+    </section>
+  );
+}
+
+function CommunityShowcase() {
+  return (
+    <section className="mt-5 grid gap-4 xl:grid-cols-[1fr_360px]">
+      <div className="panel p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Trophy className="text-amber-300" size={22} />
+            <h2 className="text-xl font-black">All-Time Popular Video Ideas</h2>
+          </div>
+          <span className="text-xs font-bold text-slate-400">Prototype stats</span>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          {topTopics.map(([topic, count, caption], index) => (
+            <button key={topic} className="leaderRow text-left">
+              <span className="leaderRank">{index + 1}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-black text-white">{topic}</span>
+                <span className="mt-1 block truncate text-xs text-slate-400">{caption}</span>
+              </span>
+              <span className="rounded-md bg-white/8 px-2 py-1 text-xs font-black text-sky-200">{count.toLocaleString()} uses</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="panel p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Flame className="text-studio-red" size={20} />
+          <h2 className="text-lg font-black">Top Posted Creators</h2>
+        </div>
+        <div className="space-y-3">
+          {topUsers.map(([name, posted, searches], index) => (
+            <button key={name} className="userRow">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-studio-red/20 text-sm font-black text-white">{index + 1}</span>
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block text-sm font-black text-white">{name}</span>
+                <span className="mt-1 block truncate text-xs text-slate-400">{searches}</span>
+              </span>
+              <span className="text-xs font-black text-emerald-300">{posted} posted</span>
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -468,7 +613,11 @@ function Blueprint({
   setActiveTab,
   regenerate,
   scriptStats,
-  input
+  input,
+  finalVideoUrl,
+  setFinalVideoUrl,
+  saveProject,
+  shareLink
 }: {
   angle: Angle;
   production: ProductionPack;
@@ -481,7 +630,23 @@ function Blueprint({
   regenerate: () => void;
   scriptStats: { words: number; minutesLow: number; minutesHigh: number };
   input: ProjectInput;
+  finalVideoUrl: string;
+  setFinalVideoUrl: (url: string) => void;
+  saveProject: (project: SavedProject) => void;
+  shareLink: string;
 }) {
+  function handleSave() {
+    saveProject({
+      id: angle.id,
+      title: angle.title,
+      topic: input.topic || angle.title,
+      mode: input.mode,
+      normalLength: input.normalLength,
+      finalVideoUrl: finalVideoUrl.trim() || undefined,
+      createdAt: new Date().toISOString()
+    });
+  }
+
   return (
     <section className="panel mt-5 p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -501,9 +666,13 @@ function Blueprint({
             <RefreshCcw size={16} />
             Regenerate
           </button>
-          <button className="secondaryButton px-3 py-2">
+          <button onClick={handleSave} className="secondaryButton px-3 py-2">
             <Bookmark size={16} />
             Save Project
+          </button>
+          <button onClick={() => copyText("Share Link", shareLink)} className="secondaryButton px-3 py-2">
+            <Link2 size={16} />
+            {copied === "Share Link" ? "Copied" : "Share Link"}
           </button>
           <button onClick={() => copyText("Markdown", markdown)} className="primaryButton px-3 py-2">
             <Download size={16} />
@@ -528,6 +697,26 @@ function Blueprint({
         <StructurePanel production={production} stats={scriptStats} input={input} />
         <ScriptPanel production={production} copied={copied} copyText={copyText} teleprompter={teleprompter} />
         <StoryboardPanel production={production} />
+      </div>
+      <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_0.85fr]">
+        <div className="blueprintPanel">
+          <h3 className="mb-2 font-black">Final Posted Video Link</h3>
+          <p className="mb-3 text-sm text-slate-400">When the creator posts the completed video, paste the YouTube link here so it can be saved with the project and counted in the posted creator showcase later.</p>
+          <input
+            value={finalVideoUrl}
+            onChange={(event) => setFinalVideoUrl(event.target.value)}
+            placeholder="https://youtube.com/watch?v=..."
+            className="h-11 w-full rounded-lg border border-sky-100/15 bg-[#081522] px-3 text-sm text-slate-200 outline-none ring-studio-red/25 placeholder:text-slate-500 focus:border-studio-red/60 focus:ring-4"
+          />
+        </div>
+        <div className="blueprintPanel">
+          <h3 className="mb-2 font-black">Free App Promo Link</h3>
+          <p className="mb-3 text-sm text-slate-400">Share what TubeScript designed. This points people back to the app and preloads the idea title.</p>
+          <button onClick={() => copyText("Share Link", shareLink)} className="primaryButton w-full">
+            <Link2 size={16} />
+            {copied === "Share Link" ? "Copied" : "Copy Share Link"}
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -557,10 +746,37 @@ function StructurePanel({ production, stats, input }: { production: ProductionPa
         ))}
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <StatTile label="Mode" value={formatLabel[input.mode]} />
+        <StatTile label="Mode" value={input.mode === "long" ? `${formatLabel[input.mode]} / ${input.normalLength} min` : formatLabel[input.mode]} />
         <StatTile label="Speak Time" value={`${stats.minutesLow}-${stats.minutesHigh}m`} />
       </div>
     </div>
+  );
+}
+
+function SavedProjects({ projects }: { projects: SavedProject[] }) {
+  if (!projects.length) {
+    return null;
+  }
+
+  return (
+    <section className="panel mt-5 p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <Bookmark className="text-studio-red" size={20} />
+        <h2 className="text-lg font-black">Saved Projects</h2>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {projects.map((project) => (
+          <article key={project.id} className="blueprintPanel">
+            <p className="line-clamp-2 text-sm font-black text-white">{project.title}</p>
+            <p className="mt-2 line-clamp-1 text-xs text-slate-400">{project.topic}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="miniBadge">{project.mode === "long" ? `${project.normalLength} min` : "Short"}</span>
+              {project.finalVideoUrl ? <span className="miniBadge text-emerald-300">Posted</span> : <span className="miniBadge">Draft</span>}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
