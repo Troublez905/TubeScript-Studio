@@ -3,7 +3,7 @@
 
 > Draft, edit, and export polished video scripts in seconds.
 
-[Try the demo](https://Troublez905.github.io/TubeScript-Studio/) • [Download](#releases) • [Contribute](CONTRIBUTING.md)
+[Try the demo] [https://tubescript-studio.vercel.app/](https://tubescript-studio.vercel.app/) • [Download](#releases) • [Contribute](CONTRIBUTING.md)
 
 ![Editor preview](assets/images/editor-screenshot.png)
 
@@ -17,5 +17,5 @@ Features
 - Developer-friendly: TypeScript codebase and examples
 
 Getting started
-1. Live demo: open the demo at https://Troublez905.github.io/TubeScript-Studio/
+1. Live demo: open the demo at https://tubescript-studio.vercel.app/
 2. Local: `git clone https://github.com/Troublez905/TubeScript-Studio.git && npm ci && npm run dev`
